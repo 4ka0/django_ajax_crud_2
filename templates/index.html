@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>CRUD Operating in AJAX</title>
+    <style>
+        .container {
+            width: 1000px;
+            margin: auto;
+            margin-top: 30px;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        table th, table td {
+            border: 1px solid #000;
+            height: 20px;
+            padding: 15px;
+        }
+
+        table th {
+            background-color: darkgrey;
+        }
+
+        button {
+            width: 100px;
+            height: 40px;
+        }
+
+        #new-blog {
+            height: 35px;
+            width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        New Blog Title:
+        <input type="text" name="new-blog" id="new-blog">
+        <button type="button" class="add-new-blog">Add</button>
+
+        <h1>All Blogs</h1>
+        <table>
+            <tr>
+                <th>Blog Title</th>
+                <th>Total likes</th>
+                <th></th>
+                <th></th>
+            </tr>
+            {% if blogs %}
+                {% for blog in blogs %}
+                    <tr>
+                        <td>{{ blog.title }}</td>
+                        <td id="like-count">{{ blog.likes }}</td>
+                        <td><button class="like-button" data-blogid="{{blog.id}}" type="button">Like</button></td>
+                        <td><button class="delete-button" data-blogid="{{blog.id}}" type="button">Delete</button></td>
+                    </tr>
+                {% endfor %}
+            {% endif %}
+        </table>
+    </div>
+
+    <!-- Import jquery for using AJAX -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+
+            /*Create Operation*/
+            $('.add-new-blog').on('click', function() {
+                var blogTitle = $("#new-blog").val();
+
+                $.ajax({
+                    url: "{% url 'add_blog' %}",
+                    type: 'GET',
+                    data: {
+                        blog_title: blogTitle,
+                    },
+                }).done(function(response) {
+                    if(response.status == 'created') {
+                        $("#new-blog").val("");
+
+                        /*For simiplicy we are relading page to see changes. You can update code to
+                        insert new tr tag in table.*/
+                        location.reload();
+                    }
+                })
+            });
+
+            /* Read and Update Operation */
+            $('.like-button').on('click', function() {
+                var blogID = $(this).attr("data-blogid");
+                var likeTag = $(this).parent().siblings('#like-count');
+
+                $.ajax({
+                    url: "{% url 'increment_likes' %}",
+                    type: 'GET',
+                    data: {
+                        blog_id: blogID,
+                    },
+                }).done(function(response) {
+                    likeTag.text(response.total_likes)
+                    likeTag = null;
+                });
+            });
+
+            /* Delete Operation */
+            $('.delete-button').on('click', function() {
+                var blogID = $(this).attr("data-blogid");
+
+                $.ajax({
+                    url: "{% url 'delete_blog' %}",
+                    type: 'GET',
+                    data: {
+                        blog_id: blogID,
+                    },
+                }).done(function(response) {
+                    /*For simiplicy we are relading page to see changes. You can update code to
+                    remove current tr tag from table.*/
+                    location.reload();
+                });
+            });
+
+        });
+    </script>
+</body>
+</html>
